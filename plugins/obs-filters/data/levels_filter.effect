@@ -1,0 +1,47 @@
+uniform float4x4 ViewProj;
+uniform texture2d image;
+
+uniform float3 gamma;
+uniform float4 red;
+uniform float4 green;
+uniform float4 blue;
+
+sampler_state textureSampler {
+	Filter    = Linear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in)
+{
+	VertData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float4 PSLevelsRGB(VertData v_in) : TARGET
+{
+	float4 rgba = image.Sample(textureSampler, v_in.uv);
+	rgba.r = max(min((rgba.r - red.r)/(red.g-red.r), 1), 0);
+	rgba.g = max(min((rgba.g - green.r)/(green.g-green.r), 1), 0);
+	rgba.b = max(min((rgba.b - blue.r)/(blue.g-blue.r), 1), 0);
+	rgba.r = rgba.r * (red.a-red.b) + red.b;
+	rgba.g = rgba.g * (green.a-green.b) + green.b;
+	rgba.b = rgba.b * (blue.a-blue.b) + blue.b;
+	return rgba;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSLevelsRGB(v_in);
+	}
+}
