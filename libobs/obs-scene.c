@@ -16,6 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include <inttypes.h>
 #include "util/threading.h"
 #include "graphics/math-defs.h"
 #include "obs-scene.h"
@@ -1303,17 +1304,22 @@ static bool hotkey_hide_sceneitem(void *data, obs_hotkey_pair_id id,
 }
 
 static void init_hotkeys(obs_scene_t *scene, obs_sceneitem_t *item,
-		const char *name)
+		const char *name, int64_t id)
 {
 	struct dstr show = {0};
 	struct dstr hide = {0};
 	struct dstr show_desc = {0};
 	struct dstr hide_desc = {0};
+	
+	struct dstr id_str = {0};
+	dstr_printf(&id_str, "%"PRId64, id);
 
-	dstr_copy(&show, "libobs.show_scene_item.%1");
+	dstr_copy(&show, "libobs.show_scene_item.%1-%2");
 	dstr_replace(&show, "%1", name);
-	dstr_copy(&hide, "libobs.hide_scene_item.%1");
+	dstr_replace(&show, "%2", id_str.array);
+	dstr_copy(&hide, "libobs.hide_scene_item.%1-%2");
 	dstr_replace(&hide, "%1", name);
+	dstr_replace(&hide, "%2", id_str.array);
 
 	dstr_copy(&show_desc, obs->hotkeys.sceneitem_show);
 	dstr_replace(&show_desc, "%1", name);
@@ -1417,7 +1423,8 @@ obs_sceneitem_t *obs_scene_add(obs_scene_t *scene, obs_source_t *source)
 	full_unlock(scene);
 
 	if (!scene->source->context.private)
-		init_hotkeys(scene, item, obs_source_get_name(source));
+		init_hotkeys(scene, item, obs_source_get_name(source),
+			obs_sceneitem_get_id(item));
 
 	calldata_init_fixed(&params, stack, sizeof(stack));
 	calldata_set_ptr(&params, "scene", scene);
