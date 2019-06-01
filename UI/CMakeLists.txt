@@ -229,6 +229,7 @@ set(obs_SOURCES
 	window-basic-transform.cpp
 	window-basic-preview.cpp
 	window-basic-about.cpp
+	window-importer.cpp
 	window-namedialog.cpp
 	window-log-reply.cpp
 	window-projector.cpp
@@ -281,6 +282,7 @@ set(obs_HEADERS
 	window-basic-adv-audio.hpp
 	window-basic-transform.hpp
 	window-basic-preview.hpp
+	window-importer.hpp
 	window-namedialog.hpp
 	window-log-reply.hpp
 	window-projector.hpp
@@ -319,6 +321,24 @@ set(obs_HEADERS
 	qt-wrappers.hpp
 	clickable-label.hpp)
 
+set(obs_importers_HEADERS
+	importers/importers.h
+	importers/base64.hpp
+	importers/base64.h
+	importers/xml.h)
+
+set(obs_importers_SOURCES
+	importers/importers.c
+	importers/base64.cpp
+	importers/xml.c
+	importers/studio.c
+	importers/classic.c
+	importers/sl.c
+	importers/xsplit.c)
+	
+source_group("importers\\Source Files" FILES ${obs_importers_SOURCES})
+source_group("importers\\Header Files" FILES ${obs_importers_HEADERS})
+
 set(obs_UI
 	forms/NameDialog.ui
 	forms/AutoConfigStartPage.ui
@@ -336,6 +356,7 @@ set(obs_UI
 	forms/OBSExtraBrowsers.ui
 	forms/OBSUpdate.ui
 	forms/OBSRemux.ui
+	forms/OBSImporter.ui
 	forms/OBSAbout.ui)
 
 set(obs_QRC
@@ -347,6 +368,8 @@ qt5_add_resources(obs_QRC_SOURCES ${obs_QRC})
 add_executable(obs WIN32
 	${obs_SOURCES}
 	${obs_HEADERS}
+	${obs_importers_SOURCES}
+	${obs_importers_HEADERS}
 	${obs_UI_HEADERS}
 	${obs_QRC_SOURCES})
 
