@@ -1,0 +1,21 @@
+name: relabeled
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  Relabelled:
+    runs-on: ubuntu-latest
+    steps:
+    - name: check ref
+      run: echo '${{ github.head_ref }}'
+    - name: trigger build
+      uses: Azure/pipelines@v1
+      with:
+        # Fullyqualified URL to the Azure DevOps organization along with project name(eg, https://dev.azure.com/organization/project-name or https://server.example.com:8080/tfs/DefaultCollection/project-name)
+        azure-devops-project-url: https://dev.azure.com/VodBox/obs-studio
+        # Name of the Azure Pipline to be triggered
+        azure-pipeline-name: VodBox.obs-studio
+        # Paste personal access token of the user as value of secret variable:AZURE_DEVOPS_TOKEN
+        azure-devops-token: '${{ secrets.AZURE_DEVOPS_TOKEN }}'
