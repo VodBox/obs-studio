@@ -615,6 +615,7 @@ static bool obs_init_data(void)
 
 	pthread_mutex_init_value(&obs->data.displays_mutex);
 	pthread_mutex_init_value(&obs->data.draw_callbacks_mutex);
+	pthread_mutex_init_value(&obs->data.module_load_callbacks_mutex);
 
 	if (pthread_mutexattr_init(&attr) != 0)
 		return false;
@@ -633,6 +634,9 @@ static bool obs_init_data(void)
 	if (pthread_mutex_init(&data->services_mutex, &attr) != 0)
 		goto fail;
 	if (pthread_mutex_init(&obs->data.draw_callbacks_mutex, &attr) != 0)
+		goto fail;
+	if (pthread_mutex_init(&obs->data.module_load_callbacks_mutex, &attr) !=
+	    0)
 		goto fail;
 	if (!obs_view_init(&data->main_view))
 		goto fail;
@@ -692,8 +696,10 @@ static void obs_free_data(void)
 	pthread_mutex_destroy(&data->encoders_mutex);
 	pthread_mutex_destroy(&data->services_mutex);
 	pthread_mutex_destroy(&data->draw_callbacks_mutex);
+	pthread_mutex_destroy(&data->module_load_callbacks_mutex);
 	da_free(data->draw_callbacks);
 	da_free(data->tick_callbacks);
+	da_free(data->module_load_callbacks);
 	obs_data_release(data->private_data);
 }
 
@@ -2364,6 +2370,32 @@ void obs_remove_main_render_callback(void (*draw)(void *param, uint32_t cx,
 	pthread_mutex_lock(&obs->data.draw_callbacks_mutex);
 	da_erase_item(obs->data.draw_callbacks, &data);
 	pthread_mutex_unlock(&obs->data.draw_callbacks_mutex);
+}
+
+void obs_add_module_loading_callback(
+	void (*module_load)(void *param, const char *module_name), void *param)
+{
+	if (!obs)
+		return;
+
+	struct module_load_callback data = {module_load, param};
+
+	pthread_mutex_lock(&obs->data.module_load_callbacks_mutex);
+	da_insert(obs->data.module_load_callbacks, 0, &data);
+	pthread_mutex_unlock(&obs->data.module_load_callbacks_mutex);
+}
+
+void obs_remove_module_loading_callback(
+	void (*module_load)(void *param, const char *module_name), void *param)
+{
+	if (!obs)
+		return;
+
+	struct module_load_callback data = {module_load, param};
+
+	pthread_mutex_lock(&obs->data.module_load_callbacks_mutex);
+	da_erase_item(obs->data.module_load_callbacks, &data);
+	pthread_mutex_unlock(&obs->data.module_load_callbacks_mutex);
 }
 
 uint32_t obs_get_total_frames(void)

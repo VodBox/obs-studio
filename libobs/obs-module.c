@@ -237,6 +237,12 @@ void obs_add_module_path(const char *bin, const char *data)
 
 static void load_all_callback(void *param, const struct obs_module_info *info)
 {
+	for (size_t i = obs->data.module_load_callbacks.num; i > 0; i--) {
+		struct module_load_callback *callback;
+		callback = obs->data.module_load_callbacks.array + (i - 1);
+		callback->module_load(callback->param, info->bin_path);
+	}
+
 	obs_module_t *module;
 
 	int code = obs_open_module(&module, info->bin_path, info->data_path);

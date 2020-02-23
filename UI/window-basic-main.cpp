@@ -1612,6 +1612,18 @@ void OBSBasic::OBSInit()
 	InitHotkeys();
 
 	App()->UpdateSplash("Loading plugins..");
+
+	auto module_load_cb = [](void *param, const char *module_name) {
+		QString splashText = "Loading ";
+		splashText += module_name;
+		splashText += "..";
+		App()->UpdateSplash(splashText);
+
+		UNUSED_PARAMETER(param);
+	};
+
+	obs_add_module_loading_callback(module_load_cb, NULL);
+
 	AddExtraModulePaths();
 	blog(LOG_INFO, "---------------------------------");
 	obs_load_all_modules();
@@ -1619,6 +1631,8 @@ void OBSBasic::OBSInit()
 	obs_log_loaded_modules();
 	blog(LOG_INFO, "---------------------------------");
 	obs_post_load_modules();
+
+	obs_remove_module_loading_callback(module_load_cb, NULL);
 
 #ifdef BROWSER_AVAILABLE
 	cef = obs_browser_init_panel();

@@ -458,6 +458,11 @@ EXPORT void obs_load_all_modules(void);
  * be called after all modules have been loaded. */
 EXPORT void obs_post_load_modules(void);
 
+EXPORT void obs_add_module_loading_callback(
+	void (*module_load)(void *param, const char *module_name), void *param);
+EXPORT void obs_remove_module_loading_callback(
+	void (*module_load)(void *param, const char *module_name), void *param);
+
 #ifndef SWIG
 struct obs_module_info {
 	const char *bin_path;

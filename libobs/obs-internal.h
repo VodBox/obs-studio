@@ -57,6 +57,11 @@ struct draw_callback {
 	void *param;
 };
 
+struct module_load_callback {
+	void (*module_load)(void *param, const char *module_name);
+	void *param;
+};
+
 /* ------------------------------------------------------------------------- */
 /* validity checks */
 
@@ -345,8 +350,10 @@ struct obs_core_data {
 	pthread_mutex_t services_mutex;
 	pthread_mutex_t audio_sources_mutex;
 	pthread_mutex_t draw_callbacks_mutex;
+	pthread_mutex_t module_load_callbacks_mutex;
 	DARRAY(struct draw_callback) draw_callbacks;
 	DARRAY(struct tick_callback) tick_callbacks;
+	DARRAY(struct module_load_callback) module_load_callbacks;
 
 	struct obs_view main_view;
 
