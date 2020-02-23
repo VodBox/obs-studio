@@ -1100,6 +1100,12 @@ bool OBSApp::InitTheme()
 	return SetTheme("System");
 }
 
+void OBSApp::InitSplash()
+{
+	splash = new QSplashScreen(QPixmap(":/res/images/splash.png"));
+	splash->show();
+}
+
 OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 	: QApplication(argc, argv), profilerNameStore(store)
 {
@@ -1335,6 +1341,7 @@ bool OBSApp::OBSInit()
 
 	qRegisterMetaType<VoidFunc>();
 
+	UpdateSplash("Loading core..");
 	if (!StartupOBS(locale.c_str(), GetProfilerNameStore()))
 		return false;
 
@@ -1770,6 +1777,9 @@ static int run_program(fstream &logFile, int argc, char *argv[])
 #endif
 
 	OBSApp program(argc, argv, profilerNameStore.get());
+	program.InitSplash();
+	program.UpdateSplash("Preparing..");
+
 	try {
 		bool created_log = false;
 
@@ -1791,6 +1801,7 @@ static int run_program(fstream &logFile, int argc, char *argv[])
 			goto run;
 		}
 
+		program.UpdateSplash("Checking for other instances..");
 		if (!multi) {
 			QMessageBox::StandardButtons buttons(
 				QMessageBox::Yes | QMessageBox::Cancel);
@@ -1831,6 +1842,7 @@ static int run_program(fstream &logFile, int argc, char *argv[])
 	run:
 #endif
 
+		program.UpdateSplash("Preparing..");
 		if (!created_log) {
 			create_log_file(logFile);
 			created_log = true;
@@ -1851,6 +1863,7 @@ static int run_program(fstream &logFile, int argc, char *argv[])
 
 		prof.Stop();
 
+		program.GetSplash()->finish(program.GetMainWindow());
 		ret = program.exec();
 
 	} catch (const char *error) {

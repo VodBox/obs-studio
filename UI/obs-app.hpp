@@ -20,6 +20,7 @@
 #include <QApplication>
 #include <QTranslator>
 #include <QPointer>
+#include <QSplashScreen>
 #include <obs.hpp>
 #include <util/lexer.h>
 #include <util/profiler.h>
@@ -74,6 +75,7 @@ private:
 	TextLookup textLookup;
 	OBSContext obsContext;
 	QPointer<OBSMainWindow> mainWindow;
+	QPointer<QSplashScreen> splash;
 	profiler_name_store_t *profilerNameStore = nullptr;
 
 	os_inhibit_t *sleepInhibitor = nullptr;
@@ -105,6 +107,13 @@ public:
 
 	void AppInit();
 	bool OBSInit();
+	void InitSplash();
+	inline QPointer<QSplashScreen> GetSplash() { return splash; }
+	inline void UpdateSplash(QString msg)
+	{
+		splash->showMessage(msg, Qt::AlignHCenter | Qt::AlignBottom,
+				    Qt::white);
+	}
 
 	void UpdateHotkeyFocusSetting(bool reset = true);
 	void DisableHotkeys();
