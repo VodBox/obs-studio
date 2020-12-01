@@ -23,6 +23,8 @@ set(decklink-ouput-ui_HEADERS
 	../../slider-ignorewheel.hpp
 	../../combobox-ignorewheel.hpp
 	../../spinbox-ignorewheel.hpp
+	../../collapsible-groupbox.hpp
+	../../clickable-label.hpp
 	./DecklinkOutputUI.h
 	decklink-ui-main.h
 	)
@@ -35,6 +37,7 @@ set(decklink-ouput-ui_SOURCES
 	../../slider-ignorewheel.cpp
 	../../combobox-ignorewheel.cpp
 	../../spinbox-ignorewheel.cpp
+	../../collapsible-groupbox.cpp
 	./DecklinkOutputUI.cpp
 	decklink-ui-main.cpp
 	)

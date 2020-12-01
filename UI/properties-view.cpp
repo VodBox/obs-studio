@@ -19,11 +19,11 @@
 #include <QMenu>
 #include <QStackedWidget>
 #include <QDir>
-#include <QGroupBox>
 #include "double-slider.hpp"
 #include "slider-ignorewheel.hpp"
 #include "spinbox-ignorewheel.hpp"
 #include "combobox-ignorewheel.hpp"
+#include "collapsible-groupbox.hpp"
 #include "qt-wrappers.hpp"
 #include "properties-view.hpp"
 #include "properties-view.moc.hpp"
@@ -181,6 +181,7 @@ OBSPropertiesView::OBSPropertiesView(OBSData settings_, void *obj_,
 	  minSize(minSize_)
 {
 	setFrameShape(QFrame::NoFrame);
+	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 	ReloadProperties();
 }
 
@@ -1338,16 +1339,18 @@ void OBSPropertiesView::AddGroup(obs_property_t *prop, QFormLayout *layout)
 	enum obs_group_type type = obs_property_group_type(prop);
 
 	// Create GroupBox
-	QGroupBox *groupBox = new QGroupBox(QT_UTF8(desc));
-	groupBox->setCheckable(type == OBS_GROUP_CHECKABLE);
+	CollapsibleGroupBox *groupBox = new CollapsibleGroupBox(QT_UTF8(desc));
+	groupBox->setCheckable(type & OBS_GROUP_CHECKABLE);
 	groupBox->setChecked(groupBox->isCheckable() ? val : true);
 	groupBox->setAccessibleName("group");
 	groupBox->setEnabled(obs_property_enabled(prop));
+	groupBox->setCollapsible(type & OBS_GROUP_COLLAPSIBLE);
+	groupBox->setCollapsed(obs_property_group_collapsed(prop));
 
 	// Create Layout and build content
 	QFormLayout *subLayout = new QFormLayout();
 	subLayout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-	groupBox->setLayout(subLayout);
+	subLayout->setLabelAlignment(Qt::AlignRight);
 
 	obs_properties_t *content = obs_property_group_content(prop);
 	obs_property_t *el = obs_properties_first(content);
@@ -1355,6 +1358,8 @@ void OBSPropertiesView::AddGroup(obs_property_t *prop, QFormLayout *layout)
 		AddProperty(el, subLayout);
 		obs_property_next(&el);
 	}
+
+	groupBox->setChildLayout(subLayout);
 
 	// Insert into UI
 	layout->setWidget(layout->rowCount(),
@@ -1365,7 +1370,10 @@ void OBSPropertiesView::AddGroup(obs_property_t *prop, QFormLayout *layout)
 	children.emplace_back(info);
 
 	// Signals
-	connect(groupBox, SIGNAL(toggled(bool)), info, SLOT(ControlChanged()));
+	connect(groupBox, SIGNAL(checkToggle(bool)), info,
+		SLOT(ControlChanged()));
+	connect(groupBox, SIGNAL(collapseToggle(bool)), info,
+		SLOT(ControlChanged()));
 }
 
 void OBSPropertiesView::AddProperty(obs_property_t *property,
@@ -1786,10 +1794,15 @@ bool WidgetInfo::FontChanged(const char *setting)
 
 void WidgetInfo::GroupChanged(const char *setting)
 {
-	QGroupBox *groupbox = static_cast<QGroupBox *>(widget);
+	CollapsibleGroupBox *groupbox =
+		static_cast<CollapsibleGroupBox *>(widget);
 	obs_data_set_bool(view->settings, setting,
 			  groupbox->isCheckable() ? groupbox->isChecked()
 						  : true);
+	if (groupbox->isCollapsed())
+		obs_property_group_collapse(property);
+	else
+		obs_property_group_expand(property);
 }
 
 void WidgetInfo::EditListReordered(const QModelIndex &parent, int start,

@@ -92,6 +92,7 @@ struct frame_rate_data {
 struct group_data {
 	enum obs_group_type type;
 	obs_properties_t *content;
+	bool collapsed;
 };
 
 static inline void path_data_free(struct path_data *data)
@@ -767,8 +768,7 @@ static bool check_property_group_duplicates(obs_properties_t *parent,
 
 obs_property_t *obs_properties_add_group(obs_properties_t *props,
 					 const char *name, const char *desc,
-					 enum obs_group_type type,
-					 obs_properties_t *group)
+					 int type, obs_properties_t *group)
 {
 	if (!props || has_prop(props, name))
 		return NULL;
@@ -791,6 +791,7 @@ obs_property_t *obs_properties_add_group(obs_properties_t *props,
 	struct group_data *data = get_property_data(p);
 	data->type = type;
 	data->content = group;
+	data->collapsed = true;
 	return p;
 }
 
@@ -1422,4 +1423,28 @@ obs_properties_t *obs_property_group_content(obs_property_t *p)
 {
 	struct group_data *data = get_type_data(p, OBS_PROPERTY_GROUP);
 	return data ? data->content : NULL;
+}
+
+bool obs_property_group_collapsed(obs_property_t *p)
+{
+	struct group_data *data = get_type_data(p, OBS_PROPERTY_GROUP);
+	return data ? data->collapsed : false;
+}
+
+void obs_property_group_collapse(obs_property_t *p)
+{
+	struct group_data *data = get_type_data(p, OBS_PROPERTY_GROUP);
+	if (!data)
+		return;
+
+	data->collapsed = true;
+}
+
+void obs_property_group_expand(obs_property_t *p)
+{
+	struct group_data *data = get_type_data(p, OBS_PROPERTY_GROUP);
+	if (!data)
+		return;
+
+	data->collapsed = false;
 }

@@ -232,6 +232,7 @@ static bool key_type_changed(obs_properties_t *props, obs_property_t *p,
 static obs_properties_t *chroma_key_properties(void *data)
 {
 	obs_properties_t *props = obs_properties_create();
+	obs_properties_t *color_props = obs_properties_create();
 
 	obs_property_t *p = obs_properties_add_list(props, SETTING_COLOR_TYPE,
 						    TEXT_COLOR_TYPE,
@@ -252,14 +253,18 @@ static obs_properties_t *chroma_key_properties(void *data)
 	obs_properties_add_int_slider(props, SETTING_SPILL, TEXT_SPILL, 1, 1000,
 				      1);
 
-	obs_properties_add_int_slider(props, SETTING_OPACITY, TEXT_OPACITY, 0,
-				      100, 1);
-	obs_properties_add_float_slider(props, SETTING_CONTRAST, TEXT_CONTRAST,
-					-1.0, 1.0, 0.01);
-	obs_properties_add_float_slider(props, SETTING_BRIGHTNESS,
+	obs_properties_add_int_slider(color_props, SETTING_OPACITY,
+				      TEXT_OPACITY, 0, 100, 1);
+	obs_properties_add_float_slider(color_props, SETTING_CONTRAST,
+					TEXT_CONTRAST, -1.0, 1.0, 0.01);
+	obs_properties_add_float_slider(color_props, SETTING_BRIGHTNESS,
 					TEXT_BRIGHTNESS, -1.0, 1.0, 0.01);
-	obs_properties_add_float_slider(props, SETTING_GAMMA, TEXT_GAMMA, -1.0,
-					1.0, 0.01);
+	obs_properties_add_float_slider(color_props, SETTING_GAMMA, TEXT_GAMMA,
+					-1.0, 1.0, 0.01);
+
+	obs_properties_add_group(props, "color_correction",
+				 obs_module_text("ColorCorrection"),
+				 OBS_GROUP_COLLAPSIBLE, color_props);
 
 	UNUSED_PARAMETER(data);
 	return props;

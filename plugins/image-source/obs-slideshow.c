@@ -27,6 +27,7 @@
 #define S_MODE                         "slide_mode"
 #define S_MODE_AUTO                    "mode_auto"
 #define S_MODE_MANUAL                  "mode_manual"
+#define S_VISUALS                      "visuals"
 
 #define TR_CUT                         "cut"
 #define TR_FADE                        "fade"
@@ -50,6 +51,7 @@
 #define T_MODE                         T_("SlideMode")
 #define T_MODE_AUTO                    T_("SlideMode.Auto")
 #define T_MODE_MANUAL                  T_("SlideMode.Manual")
+#define T_VISUALS                      T_("Visuals")
 
 #define T_TR_(text) obs_module_text("SlideShow.Transition." text)
 #define T_TR_CUT                       T_TR_("Cut")
@@ -864,6 +866,8 @@ static obs_properties_t *ss_properties(void *data)
 	int cx;
 	int cy;
 
+	obs_properties_t *visuals = obs_properties_create();
+
 	/* ----------------- */
 
 	obs_get_video_info(&ovi);
@@ -871,6 +875,10 @@ static obs_properties_t *ss_properties(void *data)
 	cy = (int)ovi.base_height;
 
 	/* ----------------- */
+
+	obs_properties_add_editable_list(ppts, S_FILES, T_FILES,
+					 OBS_EDITABLE_LIST_TYPE_FILES,
+					 file_filter, path.array);
 
 	p = obs_properties_add_list(ppts, S_BEHAVIOR, T_BEHAVIOR,
 				    OBS_COMBO_TYPE_LIST,
@@ -887,7 +895,7 @@ static obs_properties_t *ss_properties(void *data)
 	obs_property_list_add_string(p, T_MODE_AUTO, S_MODE_AUTO);
 	obs_property_list_add_string(p, T_MODE_MANUAL, S_MODE_MANUAL);
 
-	p = obs_properties_add_list(ppts, S_TRANSITION, T_TRANSITION,
+	p = obs_properties_add_list(visuals, S_TRANSITION, T_TRANSITION,
 				    OBS_COMBO_TYPE_LIST,
 				    OBS_COMBO_FORMAT_STRING);
 	obs_property_list_add_string(p, T_TR_CUT, TR_CUT);
@@ -895,14 +903,14 @@ static obs_properties_t *ss_properties(void *data)
 	obs_property_list_add_string(p, T_TR_SWIPE, TR_SWIPE);
 	obs_property_list_add_string(p, T_TR_SLIDE, TR_SLIDE);
 
-	obs_properties_add_int(ppts, S_SLIDE_TIME, T_SLIDE_TIME, 50, 3600000,
+	obs_properties_add_int(visuals, S_SLIDE_TIME, T_SLIDE_TIME, 50, 3600000,
 			       50);
-	obs_properties_add_int(ppts, S_TR_SPEED, T_TR_SPEED, 0, 3600000, 50);
+	obs_properties_add_int(visuals, S_TR_SPEED, T_TR_SPEED, 0, 3600000, 50);
 	obs_properties_add_bool(ppts, S_LOOP, T_LOOP);
 	obs_properties_add_bool(ppts, S_HIDE, T_HIDE);
 	obs_properties_add_bool(ppts, S_RANDOMIZE, T_RANDOMIZE);
 
-	p = obs_properties_add_list(ppts, S_CUSTOM_SIZE, T_CUSTOM_SIZE,
+	p = obs_properties_add_list(visuals, S_CUSTOM_SIZE, T_CUSTOM_SIZE,
 				    OBS_COMBO_TYPE_EDITABLE,
 				    OBS_COMBO_FORMAT_STRING);
 
@@ -914,6 +922,9 @@ static obs_properties_t *ss_properties(void *data)
 	char str[32];
 	snprintf(str, 32, "%dx%d", cx, cy);
 	obs_property_list_add_string(p, str, str);
+
+	obs_properties_add_group(ppts, S_VISUALS, T_VISUALS,
+				 OBS_GROUP_COLLAPSIBLE, visuals);
 
 	if (ss) {
 		pthread_mutex_lock(&ss->mutex);
@@ -930,9 +941,6 @@ static obs_properties_t *ss_properties(void *data)
 		pthread_mutex_unlock(&ss->mutex);
 	}
 
-	obs_properties_add_editable_list(ppts, S_FILES, T_FILES,
-					 OBS_EDITABLE_LIST_TYPE_FILES,
-					 file_filter, path.array);
 	dstr_free(&path);
 
 	return ppts;

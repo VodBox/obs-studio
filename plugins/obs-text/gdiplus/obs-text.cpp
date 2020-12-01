@@ -55,6 +55,7 @@ using namespace Gdiplus;
 #define S_ALIGN                         "align"
 #define S_VALIGN                        "valign"
 #define S_OPACITY                       "opacity"
+#define S_BACKGROUND                    "background"
 #define S_BKCOLOR                       "bk_color"
 #define S_BKOPACITY                     "bk_opacity"
 #define S_VERTICAL                      "vertical"
@@ -100,6 +101,7 @@ using namespace Gdiplus;
 #define T_ALIGN                         T_("Alignment")
 #define T_VALIGN                        T_("VerticalAlignment")
 #define T_OPACITY                       T_("Opacity")
+#define T_BACKGROUND                    T_("Background")
 #define T_BKCOLOR                       T_("BkColor")
 #define T_BKOPACITY                     T_("BkOpacity")
 #define T_VERTICAL                      T_("Vertical")
@@ -741,6 +743,7 @@ inline void TextSource::Update(obs_data_t *s)
 	bool new_underline = (font_flags & OBS_FONT_UNDERLINE) != 0;
 	bool new_strikeout = (font_flags & OBS_FONT_STRIKEOUT) != 0;
 
+	bool background = obs_data_get_bool(s, S_BACKGROUND);
 	uint32_t new_bk_color = obs_data_get_uint32(s, S_BKCOLOR);
 	uint32_t new_bk_opacity = obs_data_get_uint32(s, S_BKOPACITY);
 
@@ -777,7 +780,7 @@ inline void TextSource::Update(obs_data_t *s)
 	vertical = new_vertical;
 
 	bk_color = new_bk_color;
-	bk_opacity = new_bk_opacity;
+	bk_opacity = background ? new_bk_opacity : 0;
 	use_extents = new_extents;
 	wrap = new_extents_wrap;
 	extents_cx = n_extents_cx;
@@ -909,48 +912,6 @@ static bool use_file_changed(obs_properties_t *props, obs_property_t *p,
 	return true;
 }
 
-static bool outline_changed(obs_properties_t *props, obs_property_t *p,
-			    obs_data_t *s)
-{
-	bool outline = obs_data_get_bool(s, S_OUTLINE);
-
-	set_vis(outline, S_OUTLINE_SIZE, true);
-	set_vis(outline, S_OUTLINE_COLOR, true);
-	set_vis(outline, S_OUTLINE_OPACITY, true);
-	return true;
-}
-
-static bool chatlog_mode_changed(obs_properties_t *props, obs_property_t *p,
-				 obs_data_t *s)
-{
-	bool chatlog_mode = obs_data_get_bool(s, S_CHATLOG_MODE);
-
-	set_vis(chatlog_mode, S_CHATLOG_LINES, true);
-	return true;
-}
-
-static bool gradient_changed(obs_properties_t *props, obs_property_t *p,
-			     obs_data_t *s)
-{
-	bool gradient = obs_data_get_bool(s, S_GRADIENT);
-
-	set_vis(gradient, S_GRADIENT_COLOR, true);
-	set_vis(gradient, S_GRADIENT_OPACITY, true);
-	set_vis(gradient, S_GRADIENT_DIR, true);
-	return true;
-}
-
-static bool extents_modified(obs_properties_t *props, obs_property_t *p,
-			     obs_data_t *s)
-{
-	bool use_extents = obs_data_get_bool(s, S_EXTENTS);
-
-	set_vis(use_extents, S_EXTENTS_WRAP, true);
-	set_vis(use_extents, S_EXTENTS_CX, true);
-	set_vis(use_extents, S_EXTENTS_CY, true);
-	return true;
-}
-
 #undef set_vis
 
 static obs_properties_t *get_properties(void *data)
@@ -960,6 +921,12 @@ static obs_properties_t *get_properties(void *data)
 
 	obs_properties_t *props = obs_properties_create();
 	obs_property_t *p;
+
+	obs_properties_t *outline_props = obs_properties_create();
+	obs_properties_t *bg_props = obs_properties_create();
+	obs_properties_t *grad_props = obs_properties_create();
+	obs_properties_t *chatlog_props = obs_properties_create();
+	obs_properties_t *extent_props = obs_properties_create();
 
 	obs_properties_add_font(props, S_FONT, T_FONT);
 
@@ -1005,21 +972,6 @@ static obs_properties_t *get_properties(void *data)
 					  1);
 	obs_property_int_set_suffix(p, "%");
 
-	p = obs_properties_add_bool(props, S_GRADIENT, T_GRADIENT);
-	obs_property_set_modified_callback(p, gradient_changed);
-
-	obs_properties_add_color(props, S_GRADIENT_COLOR, T_GRADIENT_COLOR);
-	p = obs_properties_add_int_slider(props, S_GRADIENT_OPACITY,
-					  T_GRADIENT_OPACITY, 0, 100, 1);
-	obs_property_int_set_suffix(p, "%");
-	obs_properties_add_float_slider(props, S_GRADIENT_DIR, T_GRADIENT_DIR,
-					0, 360, 0.1);
-
-	obs_properties_add_color(props, S_BKCOLOR, T_BKCOLOR);
-	p = obs_properties_add_int_slider(props, S_BKOPACITY, T_BKOPACITY, 0,
-					  100, 1);
-	obs_property_int_set_suffix(p, "%");
-
 	p = obs_properties_add_list(props, S_ALIGN, T_ALIGN,
 				    OBS_COMBO_TYPE_LIST,
 				    OBS_COMBO_FORMAT_STRING);
@@ -1034,27 +986,54 @@ static obs_properties_t *get_properties(void *data)
 	obs_property_list_add_string(p, T_VALIGN_CENTER, S_VALIGN_CENTER);
 	obs_property_list_add_string(p, T_VALIGN_BOTTOM, S_VALIGN_BOTTOM);
 
-	p = obs_properties_add_bool(props, S_OUTLINE, T_OUTLINE);
-	obs_property_set_modified_callback(p, outline_changed);
+	obs_properties_add_group(props, S_GRADIENT, T_GRADIENT,
+				 OBS_GROUP_CHECKABLE | OBS_GROUP_COLLAPSIBLE,
+				 grad_props);
 
-	obs_properties_add_int(props, S_OUTLINE_SIZE, T_OUTLINE_SIZE, 1, 20, 1);
-	obs_properties_add_color(props, S_OUTLINE_COLOR, T_OUTLINE_COLOR);
-	p = obs_properties_add_int_slider(props, S_OUTLINE_OPACITY,
+	obs_properties_add_color(grad_props, S_GRADIENT_COLOR,
+				 T_GRADIENT_COLOR);
+	p = obs_properties_add_int_slider(grad_props, S_GRADIENT_OPACITY,
+					  T_GRADIENT_OPACITY, 0, 100, 1);
+	obs_property_int_set_suffix(p, "%");
+	obs_properties_add_float_slider(grad_props, S_GRADIENT_DIR,
+					T_GRADIENT_DIR, 0, 360, 0.1);
+
+	obs_properties_add_group(props, S_BACKGROUND, T_BACKGROUND,
+				 OBS_GROUP_CHECKABLE | OBS_GROUP_COLLAPSIBLE,
+				 bg_props);
+	obs_properties_add_color(bg_props, S_BKCOLOR, T_BKCOLOR);
+	p = obs_properties_add_int_slider(bg_props, S_BKOPACITY, T_BKOPACITY, 0,
+					  100, 1);
+	obs_property_int_set_suffix(p, "%");
+
+	obs_properties_add_group(props, S_OUTLINE, T_OUTLINE,
+				 OBS_GROUP_CHECKABLE | OBS_GROUP_COLLAPSIBLE,
+				 outline_props);
+
+	obs_properties_add_int(outline_props, S_OUTLINE_SIZE, T_OUTLINE_SIZE, 1,
+			       20, 1);
+	obs_properties_add_color(outline_props, S_OUTLINE_COLOR,
+				 T_OUTLINE_COLOR);
+	p = obs_properties_add_int_slider(outline_props, S_OUTLINE_OPACITY,
 					  T_OUTLINE_OPACITY, 0, 100, 1);
 	obs_property_int_set_suffix(p, "%");
 
-	p = obs_properties_add_bool(props, S_CHATLOG_MODE, T_CHATLOG_MODE);
-	obs_property_set_modified_callback(p, chatlog_mode_changed);
+	p = obs_properties_add_group(
+		props, S_CHATLOG_MODE, T_CHATLOG_MODE,
+		OBS_GROUP_CHECKABLE | OBS_GROUP_COLLAPSIBLE, chatlog_props);
 
-	obs_properties_add_int(props, S_CHATLOG_LINES, T_CHATLOG_LINES, 1, 1000,
-			       1);
+	obs_properties_add_int(chatlog_props, S_CHATLOG_LINES, T_CHATLOG_LINES,
+			       1, 1000, 1);
 
-	p = obs_properties_add_bool(props, S_EXTENTS, T_EXTENTS);
-	obs_property_set_modified_callback(p, extents_modified);
+	p = obs_properties_add_group(
+		props, S_EXTENTS, T_EXTENTS,
+		OBS_GROUP_CHECKABLE | OBS_GROUP_COLLAPSIBLE, extent_props);
 
-	obs_properties_add_int(props, S_EXTENTS_CX, T_EXTENTS_CX, 32, 8000, 1);
-	obs_properties_add_int(props, S_EXTENTS_CY, T_EXTENTS_CY, 32, 8000, 1);
-	obs_properties_add_bool(props, S_EXTENTS_WRAP, T_EXTENTS_WRAP);
+	obs_properties_add_int(extent_props, S_EXTENTS_CX, T_EXTENTS_CX, 32,
+			       8000, 1);
+	obs_properties_add_int(extent_props, S_EXTENTS_CY, T_EXTENTS_CY, 32,
+			       8000, 1);
+	obs_properties_add_bool(extent_props, S_EXTENTS_WRAP, T_EXTENTS_WRAP);
 
 	return props;
 }

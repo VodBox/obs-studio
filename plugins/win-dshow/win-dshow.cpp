@@ -32,6 +32,9 @@ using namespace DShow;
 
 /* settings defines that will cause errors if there are typos */
 #define VIDEO_DEVICE_ID   "video_device_id"
+#define VIDEO             "video"
+#define AUDIO             "audio"
+#define ADVANCED          "advanced"
 #define RES_TYPE          "res_type"
 #define RESOLUTION        "resolution"
 #define FRAME_INTERVAL    "frame_interval"
@@ -51,6 +54,9 @@ using namespace DShow;
 #define TEXT_DEVICE         obs_module_text("Device")
 #define TEXT_CONFIG_VIDEO   obs_module_text("ConfigureVideo")
 #define TEXT_CONFIG_XBAR    obs_module_text("ConfigureCrossbar")
+#define TEXT_VIDEO          obs_module_text("Video")
+#define TEXT_AUDIO          obs_module_text("Audio")
+#define TEXT_ADVANCED       obs_module_text("Advanced")
 #define TEXT_RES_FPS_TYPE   obs_module_text("ResFPSType")
 #define TEXT_CUSTOM_RES     obs_module_text("ResFPSType.Custom")
 #define TEXT_PREFERRED_RES  obs_module_text("ResFPSType.DevPreferred")
@@ -1855,6 +1861,10 @@ static obs_properties_t *GetDShowProperties(void *obj)
 	obs_properties_t *ppts = obs_properties_create();
 	PropertiesData *data = new PropertiesData;
 
+	obs_properties_t *v_ppts = obs_properties_create();
+	obs_properties_t *a_ppts = obs_properties_create();
+	obs_properties_t *adv_ppts = obs_properties_create();
+
 	data->input = input;
 
 	obs_properties_set_param(ppts, data, PropertiesDataDestroy);
@@ -1880,7 +1890,7 @@ static obs_properties_t *GetDShowProperties(void *obj)
 				  ActivateClicked);
 	obs_properties_add_button(ppts, "video_config", TEXT_CONFIG_VIDEO,
 				  VideoConfigClicked);
-	obs_properties_add_button(ppts, "xbar_config", TEXT_CONFIG_XBAR,
+	obs_properties_add_button(adv_ppts, "xbar_config", TEXT_CONFIG_XBAR,
 				  CrossbarConfigClicked);
 
 	obs_properties_add_bool(ppts, DEACTIVATE_WNS, TEXT_DWNS);
@@ -1888,7 +1898,7 @@ static obs_properties_t *GetDShowProperties(void *obj)
 	/* ------------------------------------- */
 	/* video settings */
 
-	p = obs_properties_add_list(ppts, RES_TYPE, TEXT_RES_FPS_TYPE,
+	p = obs_properties_add_list(v_ppts, RES_TYPE, TEXT_RES_FPS_TYPE,
 				    OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 
 	obs_property_set_modified_callback(p, ResTypeChanged);
@@ -1896,37 +1906,37 @@ static obs_properties_t *GetDShowProperties(void *obj)
 	obs_property_list_add_int(p, TEXT_PREFERRED_RES, ResType_Preferred);
 	obs_property_list_add_int(p, TEXT_CUSTOM_RES, ResType_Custom);
 
-	p = obs_properties_add_list(ppts, RESOLUTION, TEXT_RESOLUTION,
+	p = obs_properties_add_list(v_ppts, RESOLUTION, TEXT_RESOLUTION,
 				    OBS_COMBO_TYPE_EDITABLE,
 				    OBS_COMBO_FORMAT_STRING);
 
 	obs_property_set_modified_callback(p, DeviceResolutionChanged);
 
-	p = obs_properties_add_list(ppts, FRAME_INTERVAL, "FPS",
+	p = obs_properties_add_list(v_ppts, FRAME_INTERVAL, "FPS",
 				    OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 
 	obs_property_set_modified_callback(p, DeviceIntervalChanged);
 
-	p = obs_properties_add_list(ppts, VIDEO_FORMAT, TEXT_VIDEO_FORMAT,
+	p = obs_properties_add_list(v_ppts, VIDEO_FORMAT, TEXT_VIDEO_FORMAT,
 				    OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 
 	obs_property_set_modified_callback(p, VideoFormatChanged);
 
-	p = obs_properties_add_list(ppts, COLOR_SPACE, TEXT_COLOR_SPACE,
+	p = obs_properties_add_list(v_ppts, COLOR_SPACE, TEXT_COLOR_SPACE,
 				    OBS_COMBO_TYPE_LIST,
 				    OBS_COMBO_FORMAT_STRING);
 	obs_property_list_add_string(p, TEXT_COLOR_DEFAULT, "default");
 	obs_property_list_add_string(p, "709", "709");
 	obs_property_list_add_string(p, "601", "601");
 
-	p = obs_properties_add_list(ppts, COLOR_RANGE, TEXT_COLOR_RANGE,
+	p = obs_properties_add_list(v_ppts, COLOR_RANGE, TEXT_COLOR_RANGE,
 				    OBS_COMBO_TYPE_LIST,
 				    OBS_COMBO_FORMAT_STRING);
 	obs_property_list_add_string(p, TEXT_RANGE_DEFAULT, "default");
 	obs_property_list_add_string(p, TEXT_RANGE_PARTIAL, "partial");
 	obs_property_list_add_string(p, TEXT_RANGE_FULL, "full");
 
-	p = obs_properties_add_list(ppts, BUFFERING_VAL, TEXT_BUFFERING,
+	p = obs_properties_add_list(adv_ppts, BUFFERING_VAL, TEXT_BUFFERING,
 				    OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(p, TEXT_BUFFERING_AUTO,
 				  (int64_t)BufferingType::Auto);
@@ -1938,14 +1948,18 @@ static obs_properties_t *GetDShowProperties(void *obj)
 	obs_property_set_long_description(p,
 					  obs_module_text("Buffering.ToolTip"));
 
-	obs_properties_add_bool(ppts, FLIP_IMAGE, TEXT_FLIP_IMAGE);
+	obs_properties_add_bool(v_ppts, FLIP_IMAGE, TEXT_FLIP_IMAGE);
+
+	p = obs_properties_add_group(ppts, VIDEO, TEXT_VIDEO, OBS_GROUP_COLLAPSIBLE,
+				 v_ppts);
+	obs_property_group_expand(p);
 
 	/* ------------------------------------- */
 	/* audio settings */
 
 	Device::EnumAudioDevices(data->audioDevices);
 
-	p = obs_properties_add_list(ppts, AUDIO_OUTPUT_MODE, TEXT_AUDIO_MODE,
+	p = obs_properties_add_list(a_ppts, AUDIO_OUTPUT_MODE, TEXT_AUDIO_MODE,
 				    OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(p, TEXT_MODE_CAPTURE,
 				  (int64_t)AudioMode::Capture);
@@ -1957,16 +1971,23 @@ static obs_properties_t *GetDShowProperties(void *obj)
 	if (!data->audioDevices.size())
 		return ppts;
 
-	p = obs_properties_add_bool(ppts, USE_CUSTOM_AUDIO, TEXT_CUSTOM_AUDIO);
+	p = obs_properties_add_bool(a_ppts, USE_CUSTOM_AUDIO,
+				    TEXT_CUSTOM_AUDIO);
 
 	obs_property_set_modified_callback(p, CustomAudioClicked);
 
-	p = obs_properties_add_list(ppts, AUDIO_DEVICE_ID, TEXT_AUDIO_DEVICE,
+	p = obs_properties_add_list(a_ppts, AUDIO_DEVICE_ID, TEXT_AUDIO_DEVICE,
 				    OBS_COMBO_TYPE_LIST,
 				    OBS_COMBO_FORMAT_STRING);
 
 	for (const AudioDevice &device : data->audioDevices)
 		AddAudioDevice(p, device);
+
+	obs_properties_add_group(ppts, AUDIO, TEXT_AUDIO, OBS_GROUP_COLLAPSIBLE,
+				 a_ppts);
+
+	obs_properties_add_group(ppts, ADVANCED, TEXT_ADVANCED,
+				 OBS_GROUP_COLLAPSIBLE, adv_ppts);
 
 	return ppts;
 }

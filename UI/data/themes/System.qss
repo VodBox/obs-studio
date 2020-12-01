@@ -55,21 +55,21 @@ MuteCheckBox::indicator:unchecked {
     image: url(:/settings/images/settings/audio.svg);
 }
 
-SourceTreeSubItemCheckBox {
+SourceTreeSubItemCheckBox, CollapseCheckBox {
     background: transparent;
     outline: none;
 }
 
-SourceTreeSubItemCheckBox::indicator {
+SourceTreeSubItemCheckBox::indicator, CollapseCheckBox::indicator {
     width: 10px;
     height: 10px;
 }
 
-SourceTreeSubItemCheckBox::indicator:checked {
+SourceTreeSubItemCheckBox::indicator:checked, CollapseCheckBox::indicator:checked {
     image: url(:/res/images/expand.svg);
 }
 
-SourceTreeSubItemCheckBox::indicator:unchecked {
+SourceTreeSubItemCheckBox::indicator:unchecked, CollapseCheckBox::indicator:unchecked {
     image: url(:/res/images/down.svg);
 }
 
@@ -295,4 +295,12 @@ QSlider::handle:horizontal[themeID="tBarSlider"] {
 
 * [themeID="previousIcon"] {
     qproperty-icon: url(./Dark/media/media_previous.svg);
+}
+
+/* Group Box */
+
+CollapsibleGroupBox {
+    border: 1px solid rgb(220,220,220);
+    padding-top: 24px;
+    font-weight: bold;
 }

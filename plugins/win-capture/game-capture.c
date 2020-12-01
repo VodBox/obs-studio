@@ -33,6 +33,7 @@
 #define SETTING_WINDOW_PRIORITY  "priority"
 #define SETTING_COMPATIBILITY    "sli_compatibility"
 #define SETTING_CURSOR           "capture_cursor"
+#define SETTING_ADVANCED         "advanced"
 #define SETTING_TRANSPARENCY     "allow_transparency"
 #define SETTING_LIMIT_FRAMERATE  "limit_framerate"
 #define SETTING_CAPTURE_OVERLAYS "capture_overlays"
@@ -60,6 +61,7 @@
 #define TEXT_MATCH_CLASS         obs_module_text("WindowCapture.Priority.Class")
 #define TEXT_MATCH_EXE           obs_module_text("WindowCapture.Priority.Exe")
 #define TEXT_CAPTURE_CURSOR      obs_module_text("CaptureCursor")
+#define TEXT_ADVANCED            obs_module_text("Advanced")
 #define TEXT_LIMIT_FRAMERATE     obs_module_text("GameCapture.LimitFramerate")
 #define TEXT_CAPTURE_OVERLAYS    obs_module_text("GameCapture.CaptureOverlays")
 #define TEXT_ANTI_CHEAT_HOOK     obs_module_text("GameCapture.AntiCheatHook")
@@ -1998,6 +2000,8 @@ static obs_properties_t *game_capture_properties(void *data)
 	obs_properties_t *ppts = obs_properties_create();
 	obs_property_t *p;
 
+	obs_properties_t *adv = obs_properties_create();
+
 	p = obs_properties_add_list(ppts, SETTING_MODE, TEXT_MODE,
 				    OBS_COMBO_TYPE_LIST,
 				    OBS_COMBO_FORMAT_STRING);
@@ -2023,29 +2027,32 @@ static obs_properties_t *game_capture_properties(void *data)
 	obs_property_list_add_int(p, TEXT_MATCH_CLASS, WINDOW_PRIORITY_CLASS);
 	obs_property_list_add_int(p, TEXT_MATCH_EXE, WINDOW_PRIORITY_EXE);
 
-	obs_properties_add_bool(ppts, SETTING_COMPATIBILITY,
-				TEXT_SLI_COMPATIBILITY);
-
-	obs_properties_add_bool(ppts, SETTING_TRANSPARENCY,
-				TEXT_ALLOW_TRANSPARENCY);
-
-	obs_properties_add_bool(ppts, SETTING_LIMIT_FRAMERATE,
-				TEXT_LIMIT_FRAMERATE);
-
 	obs_properties_add_bool(ppts, SETTING_CURSOR, TEXT_CAPTURE_CURSOR);
 
-	obs_properties_add_bool(ppts, SETTING_ANTI_CHEAT_HOOK,
+	obs_properties_add_bool(adv, SETTING_COMPATIBILITY,
+				TEXT_SLI_COMPATIBILITY);
+
+	obs_properties_add_bool(adv, SETTING_TRANSPARENCY,
+				TEXT_ALLOW_TRANSPARENCY);
+
+	obs_properties_add_bool(adv, SETTING_LIMIT_FRAMERATE,
+				TEXT_LIMIT_FRAMERATE);
+
+	obs_properties_add_bool(adv, SETTING_ANTI_CHEAT_HOOK,
 				TEXT_ANTI_CHEAT_HOOK);
 
-	obs_properties_add_bool(ppts, SETTING_CAPTURE_OVERLAYS,
+	obs_properties_add_bool(adv, SETTING_CAPTURE_OVERLAYS,
 				TEXT_CAPTURE_OVERLAYS);
 
-	p = obs_properties_add_list(ppts, SETTING_HOOK_RATE, TEXT_HOOK_RATE,
+	p = obs_properties_add_list(adv, SETTING_HOOK_RATE, TEXT_HOOK_RATE,
 				    OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(p, TEXT_HOOK_RATE_SLOW, HOOK_RATE_SLOW);
 	obs_property_list_add_int(p, TEXT_HOOK_RATE_NORMAL, HOOK_RATE_NORMAL);
 	obs_property_list_add_int(p, TEXT_HOOK_RATE_FAST, HOOK_RATE_FAST);
 	obs_property_list_add_int(p, TEXT_HOOK_RATE_FASTEST, HOOK_RATE_FASTEST);
+
+	obs_properties_add_group(ppts, SETTING_ADVANCED, TEXT_ADVANCED,
+				 OBS_GROUP_COLLAPSIBLE, adv);
 
 	UNUSED_PARAMETER(data);
 	return ppts;

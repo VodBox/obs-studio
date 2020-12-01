@@ -33,6 +33,8 @@ set(frontend-tools_HEADERS
 	../../slider-ignorewheel.hpp
 	../../combobox-ignorewheel.hpp
 	../../spinbox-ignorewheel.hpp
+	../../collapsible-groupbox.hpp
+	../../clickable-label.hpp
 	../../qt-wrappers.hpp
 	)
 set(frontend-tools_SOURCES
@@ -47,6 +49,7 @@ set(frontend-tools_SOURCES
 	../../slider-ignorewheel.cpp
 	../../combobox-ignorewheel.cpp
 	../../spinbox-ignorewheel.cpp
+	../../collapsible-groupbox.cpp
 	../../qt-wrappers.cpp
 	)
 set(frontend-tools_UI

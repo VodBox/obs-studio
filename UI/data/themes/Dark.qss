@@ -145,10 +145,14 @@ QDockWidget::close-button:pressed, QDockWidget::float-button:pressed {
 
 /* Group Box */
 
-QGroupBox {
+QGroupBox, CollapsibleGroupBox {
     border: 1px solid rgb(31,30,31); /* veryDark */;
     border-radius: 5px;
     padding-top: 24px;
+    font-weight: bold;
+}
+
+CollapsibleGroupBox > QLabel {
     font-weight: bold;
 }
 
@@ -620,23 +624,23 @@ PauseCheckBox::indicator:unchecked {
     image: url(:/res/images/media-play.svg);
 }
 
-/* Group Collapse Checkbox */
+/* Group and Properties Collapse Checkbox */
 
-SourceTreeSubItemCheckBox {
+SourceTreeSubItemCheckBox, CollapseCheckBox {
     background: transparent;
     outline: none;
 }
 
-SourceTreeSubItemCheckBox::indicator {
+SourceTreeSubItemCheckBox::indicator, CollapseCheckBox::indicator {
     width: 10px;
     height: 10px;
 }
 
-SourceTreeSubItemCheckBox::indicator:checked {
+SourceTreeSubItemCheckBox::indicator:checked, CollapseCheckBox::indicator:checked {
     image: url(./Dark/expand.svg);
 }
 
-SourceTreeSubItemCheckBox::indicator:unchecked {
+SourceTreeSubItemCheckBox::indicator:unchecked, CollapseCheckBox::indicator:unchecked {
     image: url(./Dark/down.svg);
 }
 
