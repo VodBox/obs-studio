@@ -481,15 +481,17 @@ try {
 	InitFactory(adpIdx);
 
 	uint32_t createFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+
 	hr = D3D11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
 			       createFlags, featureLevels,
 			       sizeof(featureLevels) /
 				       sizeof(D3D_FEATURE_LEVEL),
-			       D3D11_SDK_VERSION, &device, nullptr, &context);
+			       D3D11_SDK_VERSION, &dev, nullptr, &context);
 	if (FAILED(hr))
 		throw HRError("Failed to create device", hr);
 
-	dev = device;
+	dev->QueryInterface(__uuidof(ID3D11Device1),
+			    reinterpret_cast<void **>(&device));
 
 	obj = first_obj;
 	while (obj) {

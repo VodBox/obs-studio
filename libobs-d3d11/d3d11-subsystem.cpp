@@ -468,14 +468,19 @@ void gs_device::InitDevice(uint32_t adapterIdx)
 	blog(LOG_INFO, "Loading up D3D11 on adapter %s (%" PRIu32 ")",
 	     adapterNameUTF8.Get(), adapterIdx);
 
+	ComPtr<ID3D11Device> dev;
+
 	hr = D3D11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, NULL,
 			       createFlags, featureLevels,
 			       sizeof(featureLevels) /
 				       sizeof(D3D_FEATURE_LEVEL),
-			       D3D11_SDK_VERSION, device.Assign(), &levelUsed,
+			       D3D11_SDK_VERSION, dev.Assign(), &levelUsed,
 			       context.Assign());
 	if (FAILED(hr))
 		throw UnsupportedHWError("Failed to create device", hr);
+
+	dev->QueryInterface(__uuidof(ID3D11Device1),
+			    reinterpret_cast<void **>(&device));
 
 	blog(LOG_INFO, "D3D11 loaded successfully, feature level used: %x",
 	     (unsigned int)levelUsed);
@@ -2713,6 +2718,23 @@ extern "C" EXPORT gs_texture_t *device_texture_open_shared(gs_device_t *device,
 		LogD3D11ErrorDetails(error, device);
 	} catch (const char *error) {
 		blog(LOG_ERROR, "gs_texture_open_shared (D3D11): %s", error);
+	}
+
+	return texture;
+}
+
+extern "C" EXPORT gs_texture_t *device_texture_open_shared1(gs_device_t *device,
+							    uint32_t handle)
+{
+	gs_texture *texture = nullptr;
+	try {
+		texture = new gs_texture_2d(device, handle, true);
+	} catch (const HRError &error) {
+		blog(LOG_ERROR, "gs_texture_open_shared1 (D3D11): %s (%08lX)",
+		     error.str, error.hr);
+		LogD3D11ErrorDetails(error, device);
+	} catch (const char *error) {
+		blog(LOG_ERROR, "gs_texture_open_shared1 (D3D11): %s", error);
 	}
 
 	return texture;

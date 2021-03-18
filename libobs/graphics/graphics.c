@@ -2978,6 +2978,18 @@ gs_texture_t *gs_texture_open_shared(uint32_t handle)
 	return NULL;
 }
 
+gs_texture_t* gs_texture_open_shared1(uint32_t handle)
+{
+	graphics_t *graphics = thread_graphics;
+	if (!gs_valid("gs_texture_open_shared1"))
+		return NULL;
+
+	if (graphics->exports.device_texture_open_shared1)
+		return graphics->exports.device_texture_open_shared1(
+			graphics->device, handle);
+	return NULL;
+}
+
 uint32_t gs_texture_get_shared_handle(gs_texture_t *tex)
 {
 	graphics_t *graphics = thread_graphics;

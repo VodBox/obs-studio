@@ -494,6 +494,7 @@ struct gs_texture_2d : gs_texture {
 	bool isShared = false;
 	bool genMipmaps = false;
 	uint32_t sharedHandle = GS_INVALID_HANDLE;
+	bool ntHandleType = false;
 
 	gs_texture_2d *pairedNV12texture = nullptr;
 	bool nv12 = false;
@@ -538,7 +539,7 @@ struct gs_texture_2d : gs_texture {
 
 	gs_texture_2d(gs_device_t *device, ID3D11Texture2D *nv12,
 		      uint32_t flags);
-	gs_texture_2d(gs_device_t *device, uint32_t handle);
+	gs_texture_2d(gs_device_t *device, uint32_t handle, bool ntHandle = false);
 	gs_texture_2d(gs_device_t *device, ID3D11Texture2D *obj);
 };
 
@@ -952,7 +953,7 @@ struct mat4float {
 struct gs_device {
 	ComPtr<IDXGIFactory1> factory;
 	ComPtr<IDXGIAdapter1> adapter;
-	ComPtr<ID3D11Device> device;
+	ComPtr<ID3D11Device1> device;
 	ComPtr<ID3D11DeviceContext> context;
 	uint32_t adpIdx = 0;
 	bool nv12Supported = false;
