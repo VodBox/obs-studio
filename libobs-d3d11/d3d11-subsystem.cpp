@@ -470,12 +470,11 @@ void gs_device::InitDevice(uint32_t adapterIdx)
 
 	ComPtr<ID3D11Device> dev;
 
-	hr = D3D11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, NULL,
-			       createFlags, featureLevels,
-			       sizeof(featureLevels) /
-				       sizeof(D3D_FEATURE_LEVEL),
-			       D3D11_SDK_VERSION, dev.Assign(), &levelUsed,
-			       context.Assign());
+	hr = D3D11CreateDevice(
+		adapter, D3D_DRIVER_TYPE_UNKNOWN, NULL, createFlags,
+		featureLevels,
+		sizeof(featureLevels) / sizeof(D3D_FEATURE_LEVEL),
+		D3D11_SDK_VERSION, dev.Assign(), &levelUsed, context.Assign());
 	if (FAILED(hr))
 		throw UnsupportedHWError("Failed to create device", hr);
 
@@ -2239,6 +2238,13 @@ void gs_swapchain_destroy(gs_swapchain_t *swapchain)
 
 void gs_texture_destroy(gs_texture_t *tex)
 {
+	if (tex->type == GS_TEXTURE_2D) {
+		const gs_texture_2d *tex2d =
+			static_cast<const gs_texture_2d *>(tex);
+		if (tex2d->nt)
+			CloseHandle(tex2d->nt);
+	}
+
 	delete tex;
 }
 
@@ -2764,6 +2770,52 @@ extern "C" EXPORT gs_texture_t *device_texture_wrap_obj(gs_device_t *device,
 	}
 
 	return texture;
+}
+
+extern "C" EXPORT gs_keyed_mutex_t *device_texture_get_mutex(gs_texture_t *tex)
+{
+	gs_texture_2d *tex2d = reinterpret_cast<gs_texture_2d *>(tex);
+	if (tex->type != GS_TEXTURE_2D)
+		return NULL;
+
+	ComQIPtr<IDXGIKeyedMutex> keyedMutex(tex2d->texture);
+	if (!keyedMutex)
+		return NULL;
+
+	return new gs_keyed_mutex(keyedMutex);
+}
+
+void device_keyed_mutex_destroy(gs_keyed_mutex_t *mutex)
+{
+	delete mutex;
+}
+
+extern "C" EXPORT int device_keyed_mutex_acquire_sync(gs_keyed_mutex_t *mutex,
+						      uint64_t key, uint32_t ms)
+{
+	HRESULT hr = mutex->mutex->AcquireSync(key, ms);
+
+	if (hr == S_OK) {
+		return 0;
+	} else if (hr == WAIT_TIMEOUT) {
+		return ETIMEDOUT;
+	}
+
+	return -1;
+}
+
+extern "C" EXPORT int device_keyed_mutex_release_sync(gs_keyed_mutex_t *mutex,
+						      uint64_t key)
+{
+	HRESULT hr = mutex->mutex->ReleaseSync(key);
+
+	if (hr == S_OK) {
+		return 0;
+	} else if (hr == WAIT_TIMEOUT) {
+		return ETIMEDOUT;
+	}
+
+	return -1;
 }
 
 int device_texture_acquire_sync(gs_texture_t *tex, uint64_t key, uint32_t ms)

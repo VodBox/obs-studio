@@ -327,12 +327,26 @@ gs_texture_2d::gs_texture_2d(gs_device_t *device, uint32_t handle,
 			(HANDLE)(uintptr_t)handle, __uuidof(ID3D11Texture2D),
 			(void **)texture.Assign());
 	} else {
-		hr = device->device->OpenSharedResource1((HANDLE)handle,
-					       IID_PPV_ARGS(texture.Assign()));
+		bool res = DuplicateHandle(GetCurrentProcess(), (HANDLE)handle,
+					   GetCurrentProcess(), &nt, 0, FALSE,
+					   DUPLICATE_SAME_ACCESS);
+		
+		if (!res) {
+			blog(LOG_DEBUG, "Unable to duplicate handle.");
+			CloseHandle(nt);
+		}
+
+		hr = device->device->OpenSharedResource1(
+			(HANDLE)(uintptr_t)handle,
+			IID_PPV_ARGS(texture.Assign()));
 	}
 
-	if (FAILED(hr))
+	if (FAILED(hr)) {
+		if (ntHandle)
+			CloseHandle(nt);
+
 		throw HRError("Failed to open shared 2D texture", hr);
+	}
 
 	texture->GetDesc(&td);
 

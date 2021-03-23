@@ -249,6 +249,7 @@ struct gs_rect {
 /* wrapped opaque data types */
 
 struct gs_texture;
+struct gs_texture_mutex;
 struct gs_stage_surface;
 struct gs_zstencil_buffer;
 struct gs_vertex_buffer;
@@ -267,6 +268,7 @@ struct gs_device;
 struct graphics_subsystem;
 
 typedef struct gs_texture gs_texture_t;
+typedef struct gs_keyed_mutex gs_keyed_mutex_t;
 typedef struct gs_stage_surface gs_stagesurf_t;
 typedef struct gs_zstencil_buffer gs_zstencil_t;
 typedef struct gs_vertex_buffer gs_vertbuffer_t;
@@ -915,6 +917,13 @@ EXPORT gs_stagesurf_t *gs_stagesurface_create_nv12(uint32_t width,
 
 EXPORT void gs_register_loss_callbacks(const struct gs_device_loss *callbacks);
 EXPORT void gs_unregister_loss_callbacks(void *data);
+
+EXPORT gs_keyed_mutex_t *gs_texture_get_mutex(gs_texture_t *tex);
+
+EXPORT void gs_keyed_mutex_destroy(gs_keyed_mutex_t *mutex);
+EXPORT int gs_keyed_mutex_acquire_sync(gs_keyed_mutex_t *mutex, uint64_t key,
+				       uint32_t ms);
+EXPORT int gs_keyed_mutex_release_sync(gs_keyed_mutex_t *mutex, uint64_t key);
 
 #elif __linux__
 

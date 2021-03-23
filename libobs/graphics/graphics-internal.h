@@ -322,6 +322,13 @@ struct gs_exports {
 					   uint32_t width, uint32_t height,
 					   uint32_t flags);
 
+	gs_keyed_mutex_t *(*device_texture_get_mutex)(gs_texture_t *tex);
+	void (*device_keyed_mutex_destroy)(gs_keyed_mutex_t *mutex);
+	int (*device_keyed_mutex_acquire_sync)(gs_keyed_mutex_t *mutex,
+					       uint64_t key, uint32_t ms);
+	int (*device_keyed_mutex_release_sync)(gs_keyed_mutex_t *mutex,
+					       uint64_t key);
+
 	gs_stagesurf_t *(*device_stagesurface_create_nv12)(gs_device_t *device,
 							   uint32_t width,
 							   uint32_t height);

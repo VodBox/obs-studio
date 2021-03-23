@@ -483,6 +483,8 @@ struct gs_texture_2d : gs_texture {
 	ComPtr<ID3D11RenderTargetView> renderTargetLinear[6];
 	ComPtr<IDXGISurface1> gdiSurface;
 
+	HANDLE nt = 0;
+
 	uint32_t width = 0, height = 0;
 	uint32_t flags = 0;
 	DXGI_FORMAT dxgiFormatResource = DXGI_FORMAT_UNKNOWN;
@@ -539,7 +541,8 @@ struct gs_texture_2d : gs_texture {
 
 	gs_texture_2d(gs_device_t *device, ID3D11Texture2D *nv12,
 		      uint32_t flags);
-	gs_texture_2d(gs_device_t *device, uint32_t handle, bool ntHandle = false);
+	gs_texture_2d(gs_device_t *device, uint32_t handle,
+		      bool ntHandle = false);
 	gs_texture_2d(gs_device_t *device, ID3D11Texture2D *obj);
 };
 
@@ -588,6 +591,15 @@ struct gs_texture_3d : gs_texture {
 		      uint32_t flags);
 
 	gs_texture_3d(gs_device_t *device, uint32_t handle);
+};
+
+struct gs_keyed_mutex {
+	ComQIPtr<IDXGIKeyedMutex> mutex;
+
+	inline gs_keyed_mutex(ComQIPtr<IDXGIKeyedMutex> keyedMutex)
+		: mutex(keyedMutex)
+	{
+	}
 };
 
 struct gs_zstencil_buffer : gs_obj {

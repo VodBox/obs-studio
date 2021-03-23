@@ -224,6 +224,10 @@ bool load_graphics_imports(struct gs_exports *exports, void *module,
 	GRAPHICS_IMPORT_OPTIONAL(device_stagesurface_create_nv12);
 	GRAPHICS_IMPORT_OPTIONAL(device_register_loss_callbacks);
 	GRAPHICS_IMPORT_OPTIONAL(device_unregister_loss_callbacks);
+	GRAPHICS_IMPORT_OPTIONAL(device_texture_get_mutex);
+	GRAPHICS_IMPORT_OPTIONAL(device_keyed_mutex_destroy);
+	GRAPHICS_IMPORT_OPTIONAL(device_keyed_mutex_acquire_sync);
+	GRAPHICS_IMPORT_OPTIONAL(device_keyed_mutex_release_sync);
 #elif __linux__
 	GRAPHICS_IMPORT(device_texture_create_from_dmabuf);
 #endif

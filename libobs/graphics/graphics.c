@@ -2978,7 +2978,7 @@ gs_texture_t *gs_texture_open_shared(uint32_t handle)
 	return NULL;
 }
 
-gs_texture_t* gs_texture_open_shared1(uint32_t handle)
+gs_texture_t *gs_texture_open_shared1(uint32_t handle)
 {
 	graphics_t *graphics = thread_graphics;
 	if (!gs_valid("gs_texture_open_shared1"))
@@ -3033,6 +3033,49 @@ int gs_texture_release_sync(gs_texture_t *tex, uint64_t key)
 
 	if (graphics->exports.device_texture_release_sync)
 		return graphics->exports.device_texture_release_sync(tex, key);
+	return -1;
+}
+
+gs_keyed_mutex_t *gs_texture_get_mutex(gs_texture_t *tex)
+{
+	graphics_t *graphics = thread_graphics;
+	if (!gs_valid("gs_texture_get_mutex"))
+		return NULL;
+
+	if (graphics->exports.device_texture_get_mutex)
+		return graphics->exports.device_texture_get_mutex(tex);
+	return NULL;
+}
+
+void gs_keyed_mutex_destroy(gs_keyed_mutex_t *mutex)
+{
+	graphics_t *graphics = thread_graphics;
+	if (!gs_valid("gs_keyed_muted_destroy"))
+		return;
+
+	if (graphics->exports.device_keyed_mutex_destroy)
+		graphics->exports.device_keyed_mutex_destroy(mutex);
+}
+
+int gs_keyed_mutex_acquire_sync(gs_keyed_mutex_t *mutex, uint64_t key, uint32_t ms)
+{
+	graphics_t *graphics = thread_graphics;
+	if (!gs_valid("gs_keyed_acquire_sync"))
+		return -1;
+
+	if (graphics->exports.device_keyed_mutex_acquire_sync)
+		return graphics->exports.device_keyed_mutex_acquire_sync(mutex, key, ms);
+	return -1;
+}
+
+int gs_keyed_mutex_release_sync(gs_keyed_mutex_t *mutex, uint64_t key)
+{
+	graphics_t *graphics = thread_graphics;
+	if (!gs_valid("gs_keyed_release_sync"))
+		return -1;
+
+	if (graphics->exports.device_keyed_mutex_release_sync)
+		return graphics->exports.device_keyed_mutex_release_sync(mutex, key);
 	return -1;
 }
 
